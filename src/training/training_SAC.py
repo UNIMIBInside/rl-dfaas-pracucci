@@ -1,19 +1,30 @@
+import pathlib
 import datetime
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import sys
-sys_path = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/src' 
-sys.path.append(sys_path)
+
 from torch.utils.tensorboard import SummaryWriter
+
 from SAC.replay_buffer import ReplayBuffer
 
 def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episodes=20, 
                     max_steps_per_episode=100, warm_up=512):
+    # Save logs under 'logs/SAC' in the project root directory.
+    # Each run has a different subdirectory based on start timestamp.
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/' + current_time
-    writer = SummaryWriter(train_log_dir)
-    
+    log_path = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'SAC' / current_time
+    print(f'Log folder: {str(log_path)!r}')
+
+    writer = SummaryWriter(log_path)
+
+    # Checkpoints are saved under 'checkpoints/SAC' in the project root
+    # directory.
+    checkpoint_path = pathlib.Path(__file__).parent.parent.parent / 'checkpoints' / 'SAC'
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    print(f'Checkpoint folder: {str(checkpoint_path)!r}')
+
     replay_buffer = ReplayBuffer(max_size=buffer_size, state_dim=env.observation_space.shape[0], 
                                  action_dim=env.action_space.shape[0])
     total_rewards = []
@@ -32,9 +43,7 @@ def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episode
         episode_alpha_loss = 0
 
         for step in range(max_steps_per_episode):
-            print("---------------------------------")
             print(f"Episode: {episode}, Step: {step}")
-            print("---------------------------------")
 
             action = agent.select_action(state)
             next_state, reward, truncated, done, info = env.step(action)
@@ -59,9 +68,9 @@ def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episode
             steps += 1
 
             if (episode + 1) % 50 == 0:  # Salva un checkpoint ogni 500 episodi
-                checkpoint_path = "C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/checkpoint_{episode + 1}"
-                agent.save_weights_SAC(checkpoint_path)
-            
+                checkpoint_file = checkpoint_path / f'checkpoint_{episode + 1}'
+                # Torch doesn't support pathlib, must use string.
+                agent.save_weights_SAC(str(checkpoint_path))
             if done:
                 break
         
@@ -75,13 +84,19 @@ def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episode
 
         #print(f"Episode: {episode + 1}, Reward: {episode_reward}")
 
-    writer.close() 
-    agent.save_weights_SAC("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/SAC_weights")
+    writer.close()
+
+    weights_file = log_path / 'SAC_weights'
+    agent.save_weights_SAC(str(weights_file))
+    print(f'SAC weights saved to {str(weights_file)!r}')
 
     metrics = pd.DataFrame({'Reward': total_rewards, 'Actor Loss': actor_losses, 'Alpha Loss': alpha_losses,
                             'Critic 1 Loss': critic1_losses, 'Critic 2 Loss': critic2_losses})
-    metrics.to_csv('C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/metrics_SAC.csv')
-    
+
+    metrics_file = log_path / 'metrics_SAC.csv'
+    metrics.to_csv(metrics_file)
+    print(f'SAC metrics saved to {str(metrics_file)!r}')
+
     plt.figure(figsize=(12, 8))
     plt.plot(metrics['Critic 1 Loss'].rolling(10).mean(), label='Critic1 Loss')
     plt.plot(metrics['Critic 2 Loss'].rolling(10).mean(), label='Critic2 Loss')
@@ -89,16 +104,18 @@ def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episode
     plt.xlabel('Episodes')
     plt.ylabel('Loss')
     plt.legend()
-    plt.savefig("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/critic_losses.png")
-    plt.show()
+    fig_file = log_path / 'critic_losses.png'
+    plt.savefig(fig_file)
+    print(f'Critic losses figure saved to {str(fig_file)!r}')
 
     plt.figure(figsize=(12, 8))
     plt.plot(metrics['Actor Loss'].rolling(10).mean(), label='Actor Loss')
     plt.title('Actor Loss')
     plt.xlabel('Episodes')
     plt.ylabel('Loss')
-    plt.savefig("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/actor_loss.png")
-    plt.show()
+    fig_file = log_path / 'actor_loss.png'
+    plt.savefig(fig_file)
+    print(f'Actor loss figure saved to {str(fig_file)!r}')
 
     plt.figure(figsize=(12, 8))
     plt.plot(metrics['Alpha Loss'].rolling(10).mean(), label='Alpha Loss')
@@ -106,15 +123,17 @@ def train_sac_agent(env, agent, buffer_size=1000000, batch_size=256, num_episode
     plt.xlabel('Episodes')
     plt.ylabel('Loss')
     plt.legend()
-    plt.savefig("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/alpha_loss.png")
-    plt.show()
+    fig_file = log_path / 'alpha_loss.png'
+    plt.savefig(fig_file)
+    print(f'Alpha loss figure saved to {str(fig_file)!r}')
 
     plt.figure(figsize=(12, 8))
     plt.plot(metrics['Reward'].rolling(10).mean(), label='Reward')
     plt.title('Rewards')
     plt.xlabel('Episodes')
     plt.ylabel('Reward')
-    plt.savefig("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/SAC/reward.png")
-    plt.show()
-    
+    fig_file = log_path / 'reward.png'
+    plt.savefig(fig_file)
+    print(f'Reward figure saved to {str(fig_file)!r}')
+
     return total_rewards

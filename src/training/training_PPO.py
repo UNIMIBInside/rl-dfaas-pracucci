@@ -1,13 +1,9 @@
 import pathlib
 import datetime
-import sys
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-sys_path = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/src' 
-sys.path.append(sys_path)
 
 import torch
 from torch.distributions.dirichlet import Dirichlet
@@ -20,7 +16,7 @@ def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_st
     log_path = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'PPO' / current_time
     print(f'Log folder: {str(log_path)!r}')
 
-    # Checkpoints are saved under 'checkpoint/PPO' in the project root
+    # Checkpoints are saved under 'checkpoints/PPO' in the project root
     # directory.
     checkpoint_path = pathlib.Path(__file__).parent.parent.parent / 'checkpoints' / 'PPO'
     checkpoint_path.mkdir(parents=True, exist_ok=True)
@@ -111,7 +107,7 @@ def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_st
 
     writer.close()
 
-    weights_file = checkpoint_path / 'PPO_weights'
+    weights_file = log_path / 'PPO_weights'
     agent.save_weights_PPO(str(weights_file))
 
     # Plot total rewards
