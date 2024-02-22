@@ -6,4 +6,4 @@ PYCACHE=$(shell find ./src -name __pycache__)
 clean :
 	rm $(RM_OPTS) logs
 	rm $(RM_OPTS) checkpoints
-	rm $(PYCACHE)
+	rm $(RM_OPTS) $(PYCACHE)
