@@ -1,15 +1,23 @@
+import pathlib
+
 import neat
 import matplotlib.pyplot as plt
 from env.env import TrafficManagementEnv
 
 class ExtendedStatisticsReporter(neat.StatisticsReporter):
+
     def __init__(self):
-        super().__init__()  
-        self.generation = 0  
-    
+        super().__init__()
+        self.generation = 0
+
+        # Create logs folder in the root project directory.
+        self.logs_folder = pathlib.Path(__file__).parent.parent.parent / "logs"
+        self.logs_folder.mkdir(parents=True, exist_ok=True)
+        print(f"Logs folder: {str(self.logs_folder)!r}")
+
     def post_evaluate(self, config, population, species, best_genome):
         super().post_evaluate(config, population, species, best_genome)
-        
+
         # Stampa le statistiche ogni N generazioni
         if self.generation % 5 == 0:
             print("\n----- Statistics till Generation {} -----".format(self.generation))
@@ -22,23 +30,25 @@ class ExtendedStatisticsReporter(neat.StatisticsReporter):
         # Salva grafici ogni N generazioni
         if self.generation % 10 == 0:
             self.plot_statistics()
-        self.generation += 1  
+        self.generation += 1
 
     def plot_statistics(self):
         fig, ax = plt.subplots()
-    
+
         # Retrieve the max fitness values for each generation
         max_fitness_values = [genome.fitness for genome in self.most_fit_genomes]
         ax.plot(max_fitness_values, label="Max Fitness")
-    
-    # Retrieve the mean fitness values for each generation and plot
+
+        # Retrieve the mean fitness values for each generation and plot
         mean_fitness_values = self.get_fitness_mean()
         ax.plot(mean_fitness_values, label="Mean Fitness", linestyle='--')  # Using a dashed line for mean fitness
-    
+
         ax.set(xlabel='Generation', ylabel='Fitness', title='Fitness over Generations')
         ax.grid()
-        ax.legend()  
-        plt.savefig("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/NEAT/neat_fitness_plot_gen{}.png".format(self.generation))
+        ax.legend()
+
+        fig_path = self.logs_folder / f'neat_fitness_plot_gen{self.generation}.png'
+        plt.savefig(fig_path)
         plt.close()
 
 def eval_genomes(genomes, config):
@@ -50,22 +60,31 @@ def eval_genomes(genomes, config):
         total_reward = 0.0
         while not done:
             action = net.activate(ob)
-            ob, reward, done = env.step(action)
+            ob, reward, _, done, _ = env.step(action)
             total_reward += reward
         genome.fitness = total_reward
         if genome.fitness is None:
             print("Warning: Fitness is None for genome_id", genome_id)
 
 def run():
-    config_path = "C:/Users/giaco/Desktop/repos/RL-edge-computing/src/NEAT/config_optimized.txt"
+    config_path = pathlib.Path(__file__).with_name('config_optimized.txt')
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
 
     pop = neat.Population(config)
-    checkpointer = neat.Checkpointer(50, None)  # salva ogni 50 generazioni
+
+    # Save checkpoints data to "checkpoints" folder on root project directory.
+    # Each checkpoint have 'neat-checkpoint-' prefix.
+    checkpoint_folder = pathlib.Path(__file__).parent.parent.parent / 'checkpoints'
+    print(f'Checkpoint folder: {str(checkpoint_folder)!r}')
+    checkpoint_folder.mkdir(parents=True, exist_ok=True)
+    checkpoint_prefix = checkpoint_folder / 'neat-checkpoint-'
+
+    # Save checkpoint every 50 generations.
+    checkpointer = neat.Checkpointer(50, None, checkpoint_prefix)
     pop.add_reporter(checkpointer)
-    
+
     stats = ExtendedStatisticsReporter()
     pop.add_reporter(stats)
     pop.add_reporter(neat.StdOutReporter(True))
