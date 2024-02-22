@@ -1,19 +1,33 @@
+import pathlib
 import datetime
+import sys
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import sys
-import torch
+
 sys_path = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/src' 
 sys.path.append(sys_path)
+
+import torch
 from torch.distributions.dirichlet import Dirichlet
 from torch.utils.tensorboard import SummaryWriter
 
 def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_steps_per_episode=100):
+    # Save logs under 'logs/PPO' in the project root directory.
+    # Each run has a different subdirectory based on start timestamp.
     current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    train_log_dir = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/PPO/' + current_time
-    writer = SummaryWriter(train_log_dir)
-    
+    log_path = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'PPO' / current_time
+    print(f'Log folder: {str(log_path)!r}')
+
+    # Checkpoints are saved under 'checkpoint/PPO' in the project root
+    # directory.
+    checkpoint_path = pathlib.Path(__file__).parent.parent.parent / 'checkpoints' / 'PPO'
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
+    print(f'Checkpoint folder: {str(checkpoint_path)!r}')
+
+    writer = SummaryWriter(log_path)
+
     total_rewards = []
     total_losses = []
     total_actor_losses = []
@@ -68,9 +82,10 @@ def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_st
                 states, actions, rewards, masks, values, old_probs = [], [], [], [], [], []
 
             if (episode + 1) % 50 == 0:  # Salva un checkpoint ogni 500 episodi
-                checkpoint_path = "C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/PPO/checkpoint_{episode + 1}"
-                agent.save_weights_PPO(checkpoint_path)
-            
+                checkpoint_file = checkpoint_path / f'checkpoint_{episode + 1}'
+                # Torch doesn't support pathlib objects, it must be a string.
+                agent.save_weights_PPO(str(checkpoint_file))
+
             if done:
                 break
 
@@ -94,9 +109,11 @@ def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_st
 
         #print(f"Episode: {episode + 1}, Reward: {episode_reward}, Actor Loss: {avg_actor_loss}, Critic Loss: {avg_critic_loss}")
 
-    writer.close() 
-    agent.save_weights_PPO("C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/PPO/PPO_weights")
-    
+    writer.close()
+
+    weights_file = checkpoint_path / 'PPO_weights'
+    agent.save_weights_PPO(str(weights_file))
+
     # Plot total rewards
     #plt.figure(figsize=(12, 8))
     

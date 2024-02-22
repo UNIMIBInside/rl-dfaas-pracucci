@@ -11,7 +11,7 @@ class ExtendedStatisticsReporter(neat.StatisticsReporter):
         self.generation = 0
 
         # Create logs folder in the root project directory.
-        self.logs_folder = pathlib.Path(__file__).parent.parent.parent / "logs"
+        self.logs_folder = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'NEAT'
         self.logs_folder.mkdir(parents=True, exist_ok=True)
         print(f"Logs folder: {str(self.logs_folder)!r}")
 

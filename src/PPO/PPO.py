@@ -5,9 +5,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.dirichlet import Dirichlet
 
-print(torch.cuda.is_available())
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Device: {device}")
 seed = 0
 torch.manual_seed(seed)
 if torch.cuda.is_available():
@@ -49,8 +46,10 @@ class PPO:
         self.actor = Actor(state_dim, action_dim, num_units)
         self.critic = Critic(state_dim, num_units)
         self.optimizer = optim.Adam(list(self.actor.parameters()) + list(self.critic.parameters()), lr=lr)
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+        print(f'Torch device for PPO: {self.device.type}')
+
         self.gamma = gamma                   # discount factor, how much to discount future rewards
         self.gae_lambda = gae_lambda         # parameter for Generalized Advantage Estimation
         self.clip_epsilon = clip_epsilon     # parameter for PPO, for clipping surrogate objective
