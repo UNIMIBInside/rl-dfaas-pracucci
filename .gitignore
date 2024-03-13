@@ -1,7 +1,7 @@
 venv/
 logs/
 .env
-.pdf
+*.pdf
 __pycache__/
 *.swp
 checkpoints/

@@ -1,0 +1,10 @@
+Train Sx Test Sx, standard average reward, tuned average reward
+Train S1 Test S1, 450.70, 8412.32
+Train S1 Test S2, -12139.11, 4666.79
+Train S1 Test S3, -5736.56, 10791.81
+Train S2 Test S1, -3416.45, 6565.17
+Train S2 Test S2, -6768.64, 1739.84
+Train S2 Test S3, -3196.46, 4805.06
+Train S3 Test S1, -5915.59, 7357.59
+Train S3 Test S2, -12208.15, -4251.82
+Train S3 Test S3, -2658.92, 10884.94
