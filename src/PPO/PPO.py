@@ -40,6 +40,8 @@ class Critic(nn.Module):
         x = torch.tanh(self.fc3(x))
         x = self.fc4(x)
         return x
+
+
     
 class PPO:
     def __init__(self, state_dim, action_dim, lr=0.0007, gamma=0.91, gae_lambda=0.95, clip_epsilon=0.2, ent_coef=0.01, max_grad_norm=0.0, num_units=167):
@@ -149,11 +151,15 @@ class PPO:
                 return loss.item(), actor_loss.item(), critic_loss.item(), ent_loss.item()
             
     def save_weights_PPO(self, path):
+        path = str(path) # Convert eventual pathlib.Path objects.
+
         torch.save(self.actor.state_dict(), path + '_actor.pth')
         torch.save(self.critic.state_dict(), path + '_critic.pth')
         #torch.save(self.optimizer.state_dict(), path + '_optimizer.pth')
     
     def load_weights_PPO(self, path):
+        path = str(path) # Convert eventual pathlib.Path objects.
+
         self.actor.load_state_dict(torch.load(path + '_actor.pth'))
         self.critic.load_state_dict(torch.load(path + '_critic.pth'))
         #self.optimizer.load_state_dict(torch.load(path + '_optimizer.pth'))   

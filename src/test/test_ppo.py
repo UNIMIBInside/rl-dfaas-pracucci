@@ -1,19 +1,25 @@
+import pathlib
 import sys
-sys_path = 'C:/Users/giaco/Desktop/repos/RL-edge-computing/src' 
-sys.path.append(sys_path)
+import csv
+
+# Add custom path with local Python modules and files.
+path = pathlib.Path(__file__).parent.parent
+sys.path.append(str(path))
+
 from env.env import TrafficManagementEnv
 from PPO.PPO import PPO
+
 import matplotlib.pyplot as plt
-import csv
 
 state_dim = 5  
 action_dim = 3 
 agent = PPO(state_dim, action_dim)
 
-path_to_weights = "C:/Users/giaco/Desktop/repos/RL-edge-computing/logs/PPO/PPO_weights" 
-agent.load_weights_PPO(path_to_weights)
 
-env = TrafficManagementEnv()  
+weights = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'PPO' / 'PPO_weights'
+agent.load_weights_PPO(weights)
+
+env = TrafficManagementEnv()
 num_episodes = 50
 all_episode_rewards = []
 all_episode_rejections = []

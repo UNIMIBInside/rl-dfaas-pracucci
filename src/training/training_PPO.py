@@ -1,6 +1,4 @@
 import pathlib
-import datetime
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,9 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_steps_per_episode=100):
     # Save logs under 'logs/PPO' in the project root directory.
-    # Each run has a different subdirectory based on start timestamp.
-    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_path = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'PPO' / current_time
+    log_path = pathlib.Path(__file__).parent.parent.parent / 'logs' / 'PPO'
     print(f'Log folder: {str(log_path)!r}')
 
     # Checkpoints are saved under 'checkpoints/PPO' in the project root
@@ -79,8 +75,7 @@ def train_ppo_agent(env, agent, horizon=1024, epochs=10, num_episodes=20, max_st
 
             if (episode + 1) % 50 == 0:  # Salva un checkpoint ogni 500 episodi
                 checkpoint_file = checkpoint_path / f'checkpoint_{episode + 1}'
-                # Torch doesn't support pathlib objects, it must be a string.
-                agent.save_weights_PPO(str(checkpoint_file))
+                agent.save_weights_PPO(checkpoint_file)
 
             if done:
                 break
