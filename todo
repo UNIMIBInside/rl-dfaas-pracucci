@@ -1,0 +1,3 @@
+Ho fatto questo comando per installare torch, non va il requirement:
+
+    pip3 install torch torchvision torchaudio
